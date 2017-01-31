@@ -1,0 +1,102 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters" : {
+    "Locustfile" : {
+      "Type" : "String",
+      "Description" : "The locustfile!"
+    },
+    "SgId" : {
+      "Type" : "String",
+      "Description" : "Security group id"
+    },
+    "KeyName" : {
+      "Type" : "String",
+      "Description" : "The name of the key to use for the instance"
+    },
+    "SubnetId" : {
+      "Type" : "String",
+      "Description" : "The subnet id to use for the instances"
+    },
+    "InstanceSize" : {
+      "Type" : "String",
+      "Description" : "the default instance size "
+    },
+    "Name" : {
+      "Type" : "String",
+      "Description" : "the name of the cluster"
+    },
+    "SupervisorConf" : {
+      "Type" : "String",
+      "Description" : "supervisord.conf file"
+    }
+  },
+  "Resources": {
+    "LaunchConfig": {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Properties" : {
+          "ImageId": "ami-70edb016",
+          "InstanceType": { "Ref" : "InstanceSize" },
+          "SecurityGroups": [{ "Ref" : "SgId" }],
+          "KeyName" : { "Ref" : "KeyName" },
+          "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+               "#!/bin/bash -xe\n",
+               "yum update -y aws-cfn-bootstrap\n",
+               "/opt/aws/bin/cfn-init -v ",
+               "         --stack ", { "Ref" : "AWS::StackName" },
+               "         --resource LaunchConfig ",
+               "         --configsets Install ",
+               "         --region ", { "Ref" : "AWS::Region" }, "\n"
+          ]]}}
+      },
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "Install" : [ "Install" ]
+          },
+          "Install" : {
+            "files" : {
+              "/home/ec2-user/locustfile.py" : {
+                "content" : { "Ref" : "Locustfile" },
+                "mode"  : "000644",
+                "owner" : "root",
+                "group" : "root"
+              },
+              "/etc/supervisord.conf" : {
+                "content" : { "Ref" : "SupervisorConf" },
+                "mode"  : "000777",
+                "owner" : "root",
+                "group" : "root"
+              }
+            },
+            "commands" : {
+              "install_locust" : {
+                "command" : "wget http://pypi.python.org/packages/source/p/pip/pip-1.1.tar.gz#md5=62a9f08dd5dc69d76734568a6c040508 && tar -xvf pip*.gz && cd pip* && python setup.py install && yum -y install gcc-c++ && pip install locustio && pip install pyzmq",
+                "cwd" : "~",
+                "ignoreErrors" : "false"
+              },
+              "install_supervisor" : {
+                "command" : "wget https://pypi.python.org/packages/80/37/964c0d53cbd328796b1aeb7abea4c0f7b0e8c7197ea9b0b9967b7d004def/supervisor-3.3.1.tar.gz && tar -xvf supervisor*.gz && cd supervisor* && python setup.py install && pip install supervisor",
+                "cwd" : "~",
+                "ignoreErrors" : "false"
+              },
+              "supervisord_run" : {
+                "command" : "/usr/local/bin/supervisord",
+                "cwd" : "~",
+                "ignoreErrors" : "false"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ScalingGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+        "Properties" : {
+          "VPCZoneIdentifier" : [{ "Ref" : "SubnetId" }],
+          "LaunchConfigurationName" : { "Ref": "LaunchConfig" },
+          "MinSize" : "4",
+          "MaxSize" : "4"
+       }
+    }
+  }
+}
