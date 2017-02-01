@@ -28,13 +28,17 @@
     "SupervisorConf" : {
       "Type" : "String",
       "Description" : "supervisord.conf file"
+    },
+    "AMI" : {
+      "Type" : "String",
+      "Description" : "the ami id to use"
     }
   },
   "Resources": {
     "LocustMaster": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
-        "ImageId": "ami-70edb016",
+        "ImageId": { "Ref" : "AMI" },
         "SecurityGroupIds": [{ "Ref" : "SgId" }],
         "KeyName" : { "Ref" : "KeyName" },
         "SubnetId" : { "Ref" : "SubnetId" },

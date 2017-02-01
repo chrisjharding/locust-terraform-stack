@@ -18,6 +18,7 @@ module "nodes" {
   public_key = "${var.public_key}"
   vpc_id = "${module.networking.vpc_id}"
   worker_instance_type = "${var.worker_instance_type}"
+  ami = "ami-70edb016"
   locust_command = "/usr/local/bin/locust -f /home/ec2-user/locustfile.py --host=${var.test_host}"
   number_of_workers = "${var.number_of_workers}"
 }

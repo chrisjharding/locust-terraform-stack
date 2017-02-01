@@ -35,6 +35,7 @@ resource "aws_cloudformation_stack" "master" {
       KeyName = "${aws_key_pair.deployer.key_name}"
       SubnetId = "${element(split(",", var.subnet_ids), 0)}"
       InstanceSize = "t2.micro"
+      AMI = "${var.ami}"
       Name = "${var.name}"
       SupervisorConf = "${replace(file("./tfmodules/nodes/supervisord.conf"), "$${var.locust_command}", "${var.locust_command} --master")}"
   }
@@ -51,6 +52,7 @@ resource "aws_cloudformation_stack" "workers" {
       SubnetIds = "${var.subnet_ids}"
       InstanceSize = "${var.worker_instance_type}"
       Name = "${var.name}"
+      AMI = "${var.ami}"
       NumberOfWorkers = "${var.number_of_workers}"
       SupervisorConf = "${replace(file("./tfmodules/nodes/supervisord.conf"), "$${var.locust_command}", "${var.locust_command} --slave --master-host=${aws_cloudformation_stack.master.outputs["masterip"]}")}"
   }

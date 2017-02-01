@@ -32,13 +32,17 @@
     "NumberOfWorkers" : {
       "Type" : "String",
       "Description" : "Number of worker to spawn"
+    },
+    "AMI" : {
+      "Type" : "String",
+      "Description" : "the ami id to use"
     }
   },
   "Resources": {
     "LaunchConfig": {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties" : {
-          "ImageId": "ami-70edb016",
+          "ImageId": { "Ref" : "AMI" },
           "InstanceType": { "Ref" : "InstanceSize" },
           "SecurityGroups": [{ "Ref" : "SgId" }],
           "KeyName" : { "Ref" : "KeyName" },
