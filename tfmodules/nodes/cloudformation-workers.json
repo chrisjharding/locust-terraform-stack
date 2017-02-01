@@ -13,7 +13,7 @@
       "Type" : "String",
       "Description" : "The name of the key to use for the instance"
     },
-    "SubnetId" : {
+    "SubnetIds" : {
       "Type" : "String",
       "Description" : "The subnet id to use for the instances"
     },
@@ -28,6 +28,10 @@
     "SupervisorConf" : {
       "Type" : "String",
       "Description" : "supervisord.conf file"
+    },
+    "NumberOfWorkers" : {
+      "Type" : "String",
+      "Description" : "Number of worker to spawn"
     }
   },
   "Resources": {
@@ -92,10 +96,17 @@
     "ScalingGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
         "Properties" : {
-          "VPCZoneIdentifier" : [{ "Ref" : "SubnetId" }],
+          "VPCZoneIdentifier" : { "Fn::Split" : [ ",", { "Ref" : "SubnetIds" } ] },
           "LaunchConfigurationName" : { "Ref": "LaunchConfig" },
-          "MinSize" : "4",
-          "MaxSize" : "4"
+          "MinSize" : { "Ref": "NumberOfWorkers" },
+          "MaxSize" : { "Ref": "NumberOfWorkers" },
+          "Tags": [
+            {
+              "PropagateAtLaunch": true,
+              "Value": "locust-worker",
+              "Key": "Name"
+            }
+          ]
        }
     }
   }
