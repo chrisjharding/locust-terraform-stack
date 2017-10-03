@@ -9,16 +9,22 @@ resource "tls_private_key" "temp" {
 }
 
 # setup security groups
-resource "aws_security_group" "allow_all" {
-  name        = "allow_all"
+resource "aws_security_group" "nodes" {
+  name        = "locust-nodes"
   description = "Allow all inbound traffic"
   vpc_id      = "${var.vpc_id}"
 
-  // only a temporary stack so allow everything
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    from_port   = 8089
+    to_port     = 8089
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -30,12 +36,21 @@ resource "aws_security_group" "allow_all" {
   }
 }
 
+resource "aws_security_group_rule" "allow_cross_comms" {
+  security_group_id        = "${aws_security_group.nodes.id}"
+  type                     = "ingress"
+  from_port                = 0
+  to_port                  = 0
+  protocol                 = "-1"
+  source_security_group_id = "${aws_security_group.nodes.id}"
+}
+
 # setup master locust stack via cloudformation as we can load large files onto the instances.
 resource "aws_instance" "master" {
   ami                    = "${var.ami}"
   instance_type          = "t2.micro"
   key_name               = "${aws_key_pair.deployer.key_name}"
-  vpc_security_group_ids = ["${aws_security_group.allow_all.id}"]
+  vpc_security_group_ids = ["${aws_security_group.nodes.id}"]
   subnet_id              = "${var.subnet_id}"
 
   tags {
@@ -75,7 +90,7 @@ resource "aws_instance" "slave" {
   ami                    = "${var.ami}"
   instance_type          = "${var.worker_instance_type}"
   key_name               = "${aws_key_pair.deployer.key_name}"
-  vpc_security_group_ids = ["${aws_security_group.allow_all.id}"]
+  vpc_security_group_ids = ["${aws_security_group.nodes.id}"]
   subnet_id              = "${var.subnet_id}"
 
   tags {
