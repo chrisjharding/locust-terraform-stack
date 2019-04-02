@@ -71,7 +71,7 @@ resource "aws_instance" "master" {
     inline = [
       "echo \"command=${var.locust_command} --master\" >> supervisord.conf",
       "sudo mv supervisord.conf /etc/supervisord.conf",
-      "wget http://pypi.python.org/packages/source/p/pip/pip-1.1.tar.gz#md5=62a9f08dd5dc69d76734568a6c040508 && tar -xvf pip*.gz && cd pip* && sudo python setup.py install && sudo yum -y install gcc-c++ && sudo pip install locustio && sudo pip install pyzmq",
+      "sudo pip install locustio && sudo pip install pyzmq",
       "wget https://pypi.python.org/packages/80/37/964c0d53cbd328796b1aeb7abea4c0f7b0e8c7197ea9b0b9967b7d004def/supervisor-3.3.1.tar.gz && tar -xvf supervisor*.gz && cd supervisor* && sudo python setup.py install && sudo pip install supervisor",
       "sudo /usr/local/bin/supervisord",
     ]
@@ -111,7 +111,7 @@ resource "aws_instance" "slave" {
     inline = [
       "echo \"command=${var.locust_command} --slave --master-host=${aws_instance.master.private_ip}\" >> supervisord.conf",
       "sudo mv supervisord.conf /etc/supervisord.conf",
-      "wget http://pypi.python.org/packages/source/p/pip/pip-1.1.tar.gz#md5=62a9f08dd5dc69d76734568a6c040508 && tar -xvf pip*.gz && cd pip* && sudo python setup.py install && sudo yum -y install gcc-c++ && sudo pip install locustio && sudo pip install pyzmq",
+      "sudo pip install locustio && sudo pip install pyzmq",
       "wget https://pypi.python.org/packages/80/37/964c0d53cbd328796b1aeb7abea4c0f7b0e8c7197ea9b0b9967b7d004def/supervisor-3.3.1.tar.gz && tar -xvf supervisor*.gz && cd supervisor* && sudo python setup.py install && sudo pip install supervisor",
       "sudo /usr/local/bin/supervisord",
     ]
